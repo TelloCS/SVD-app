@@ -1,0 +1,29 @@
+*venv setup (in powershell)
+python -m venv .venv
+
+(in bash)
+source .venv/Scripts/activate
+
+*packages
+pip3 install flask flask-sqlalchemy pandas graphviz
+
+*runs a local sever
+python app.py
+
+*venv deactivate
+deactivate
+
+# print(f'Call: {ast.unparse(node.func), node.args}')
+    # if ast.unparse(node.func) == 'input':
+        # print(node.__dict__)
+        # print(ast.unparse(node))
+    # if isinstance(node.func, ast.Name) and node.func.id == 'input':
+    #     print(f'input: {ast.unparse(node.func), node.func.lineno}')
+    #     for arg in node.args:
+    #         if self.is_tainted(arg):
+    #             print('Tainted')
+    # if isinstance(node.func, ast.Name) and node.func.id == 'print':
+    #     print(f'print: {ast.unparse(node.func), node.func.lineno}')
+    #     for arg in node.args:
+    #         if self.is_tainted(arg):
+    #             print('Tainted')
