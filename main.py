@@ -32,7 +32,7 @@ class Visitor(ast.NodeVisitor):
         self.generic_visit(node)
 
     def get_data(self):
-        return pd.DataFrame(self.data)
+        return self.data
     
     # def visualize(self):
     #     self.dot.render('output/graph', format='png', cleanup=True)
@@ -46,7 +46,13 @@ def parse_file(code):
     analyzer.visit(tree)
     return analyzer.get_data()
 
-# print(row)
+# code = parse_file('program1.py')
+# print(code)
+
+# for i in code:
+#     print(i)
+
+
 
 # if __name__ == "__main__":
 

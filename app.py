@@ -21,13 +21,14 @@ def upload():
     try:
         file = request.files['upload-code']
         if file:
-            file.save(os.path.join(
+            filepath = os.path.join(
                 app.config["UPLOAD_DIRECTORY"],
                 secure_filename(file.filename)
-            ))
-            files = os.listdir(app.config["UPLOAD_DIRECTORY"])
-            print(files)
-            return render_template('parse.html', files=files)
+            )
+            # files = os.listdir(app.config["UPLOAD_DIRECTORY"])
+            file.save(filepath)
+            parse = parse_file(filepath)
+            return render_template('parse.html', file=parse)
     except RequestEntityTooLarge:
         return "File is larger than the 16MB limit"
     return redirect('/')

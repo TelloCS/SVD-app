@@ -6,4 +6,18 @@
 
 {% block body %}
 <h3>File is uploaded</h3>
+<table>
+    <tr>
+        <th>nodeType</th>
+        <th>tracked</th>
+        <th>line</th>
+    </tr>
+    {% for row in file %}
+        <tr>
+            <td>{{row.nodeType}}</td>
+            <td>{{row.tracked}}</td>
+            <td>{{row.line}}</td>
+        </tr>
+    {% endfor %}
+</table>
 {% endblock %}
