@@ -7,9 +7,15 @@
 {% block body %}
 <div class="content">
     <form action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="upload-code" id="upload-code" accept=".py" required />
-        <!-- <label for="upload-code">Upload Code</label> -->
-        <input type="submit" name="submit-form" id="submit-form" value="Submit">
+        <div class="upload-code-container">
+            <input type="file" name="upload-code" id="upload-code" accept=".py" required />
+            <label for="upload-code">Upload Code</label>
+            <!-- need file name to output -->
+            <div class="file-name" id="file-name">No file(s) selected</div>
+        </div>
+        <div class="submit-form-container">
+            <input type="submit" name="submit-form" id="submit-form" value="Submit">
+        </div>
     </form>
 </div>
 {% endblock %}

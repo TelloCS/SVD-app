@@ -12,3 +12,5 @@ python app.py
 
 *venv deactivate
 deactivate
+
+need to create a uploads file in the SVD directory
