@@ -3,7 +3,7 @@ from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
 import os
 from flask_sqlalchemy import SQLAlchemy
-from main import parse_file, flow_of_data, possible_sql_injection
+from main import parse_file, flow_of_data, possible_sql_injection, get_vulnerable_data
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkeyhello'
@@ -30,7 +30,11 @@ def upload():
             session['uploaded_file'] = filepath
             parse = parse_file(filepath)
             sql_detection = possible_sql_injection(filepath)
-            return render_template('parse.html', file=parse, sql=sql_detection)
+            show_data = get_vulnerable_data(filepath)
+            return render_template('parse.html',
+                                   file=parse,
+                                   sql=sql_detection,
+                                   data=show_data)
     except RequestEntityTooLarge:
         return "File is larger than the 16MB limit"
     return redirect('/')

@@ -5,47 +5,67 @@
 {% endblock %}
 
 {% block body %}
-<div class="content">
-    <form action="/upload" method="post" enctype="multipart/form-data">
-        <div class="upload-code-container">
-            <input type="file" name="upload-code" id="upload-code" accept=".py" required />
-            <label for="upload-code">Upload Code</label>
-            <!-- need file name to output -->
-            <div class="file-name" id="file-name">No file(s) selected</div>
-        </div>
-        <div class="submit-form-container">
-            <input type="submit" name="submit-form" id="submit-form" value="Submit">
-        </div>
-    </form>
-</div>
-<div class="parse-container">
-    <div class="function-table">
-        <table>
-            <tr>
-                <th>Functions</th>
-            </tr>
-            {% for row in file %}
+<div class="parse-wrapper">
+
+    <!-- <div class="content">
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <div class="upload-code-container">
+                <input type="file" name="upload-code" id="upload-code" accept=".py" required />
+                <label for="upload-code">Upload Code</label>
+                <div class="file-name" id="file-name">No file(s) selected</div>
+            </div>
+            <div class="submit-form-container">
+                <input type="submit" name="submit-form" id="submit-form" value="Submit">
+            </div>
+        </form>
+    </div> -->
+
+    <div class="parse-container">
+        <div class="function-table">
+            <table>
                 <tr>
-                    <td>{{row}}</td>
+                    <th>Functions</th>
                 </tr>
-            {% endfor %}
-        </table>
-        <div class="source-sink-container">
-            <form action="/upload/flow" method="post">
-                <div>
-                    <input type="text" name="source" id="sink" placeholder="Source">
-                </div>
-                <div>
-                    <input type="text" name="sink" id="sink" placeholder="Sink">
-                </div>
-                <div>
-                    <input type="submit" value="Submit">
-                </div>
-            </form> 
+                {% for row in file %}
+                    <tr>
+                        <td>{{row}}</td>
+                    </tr>
+                {% endfor %}
+            </table>
         </div>
     </div>
+    <div class="right">
+        <div class="source-sink-container">
+            <form action="/upload/flow" method="post">
+                <input type="text" name="source" id="source" placeholder="Source">
+                <input type="text" name="sink" id="sink" placeholder="Sink">
+                <input type="submit" value="Submit">
+            </form>
+        </div>
+        <div class="flow-table">
+            <table>
+                <tr>
+                    <th>nodeType</th>
+                    <th>tracked</th>
+                    <th>line</th>
+                </tr>
+                {% if sql %}
+                    {% for row in data %}
+                        <tr>
+                            <td>{{row.nodeType}}</td>
+                            <td style="background-color: lightcoral;">{{row.tracked}}</td>
+                            <td>{{row.line}}</td>
+                        </tr>    
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td>...</td>
+                        <td>...</td>
+                        <td>...</td>
+                    </tr> 
+                {% endif %}
+            </table>
+        </div>  
+    </div>
 </div>
-<!-- <div class="detection">
-    <p>{{sql}}</p>
-</div> -->
 {% endblock %}

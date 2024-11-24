@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css')}}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.0/css/all.min.css" />
     {% block head %}{% endblock %}
 </head>
 <body>
-    <header>
-        <a href="/">home</a>
-    </header>
+    <nav>
+        <a href="/"><i class="fa-sharp fa-solid fa-house"></i></a>
+    </nav>
     <div class="container">
         {% block body %}{% endblock %}
     </div>

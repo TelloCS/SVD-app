@@ -14,3 +14,7 @@ python app.py
 deactivate
 
 need to create a uploads file in the SVD directory
+
+git add --all (for all files)
+git commit -m "some message" (message could be anything)
+git push origin main

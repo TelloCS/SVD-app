@@ -56,19 +56,35 @@ class SourceToSink(ast.NodeVisitor):
 class SQLInjectionDetection(ast.NodeVisitor):
     def __init__(self):
         self.injection_patterns = []
+        self.data = []
 
-    def visit(self, node):
-        if isinstance(node, ast.BinOp):
-            if isinstance(node.op, ast.Add):
-                if isinstance(node.left, ast.Constant) and isinstance(node.right, ast.Name):
-                    self.injection_patterns.append(f"Possible SQL injection pattern: {ast.dump(node)}")
-                elif isinstance(node.right, ast.Constant) and isinstance(node.left, ast.Name):
-                    self.injection_patterns.append(f"Possible SQL injection pattern: {ast.dump(node)}")
+    # def visit_Call(self, node):
+    #     if isinstance(node.func, ast.Attribute) and node.func.attr == 'execute':
+    #         if isinstance(node.args[0], ast.Name):
+    #             print(ast.unparse(node.args[0]))
+    #     self.generic_visit(node)
+
+    def visit_Assign(self, node):
+        if isinstance(node.value, (ast.BinOp, ast.JoinedStr)):
+            self.injection_patterns.append(f"Possible SQL injection pattern")
+            self.data.append({
+                            'nodeType': type(node).__name__,
+                            'tracked': ast.unparse(node),
+                            'line': node.lineno
+                            })
         self.generic_visit(node)
+
+    # if isinstance(node.value, ast.BinOp):
+        #     if isinstance(node.value.left, ast.Constant) and isinstance(node.value.right, ast.Name):
+        #         self.injection_patterns.append(f"Possible SQL injection pattern")
+        #     elif isinstance(node.value.right, ast.Constant) and isinstance(node.value.left, ast.Name):
+        #         self.injection_patterns.append(f"Possible SQL injection pattern")
 
     def get_patterns(self):
         return '\n'.join(self.injection_patterns)
-
+    
+    def get_data(self):
+        return self.data
 
 #reduce redundancy
 def parse_file(code):
@@ -98,13 +114,25 @@ def possible_sql_injection(code):
     analyzer.visit(tree)
     return analyzer.get_patterns()
 
+def get_vulnerable_data(code):
+    with open(code) as f:
+        code = f.read()
+
+    tree = ast.parse(code)
+    analyzer = SQLInjectionDetection()
+    analyzer.visit(tree)
+    return analyzer.get_data()
 
 if __name__ == "__main__":
-    table = parse_file('program1.py')
+    table = parse_file('program2.py')
     print(table)
-
-    flow = flow_of_data('program1.py')
-    print(flow)
 
     # flow = flow_of_data('program1.py')
     # print(flow)
+
+    flow = get_vulnerable_data('program2.py')
+    # print(flow)
+    print(flow)
+
+    for data in flow:
+        print(data)
