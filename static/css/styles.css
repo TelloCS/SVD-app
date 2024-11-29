@@ -63,16 +63,13 @@ nav {
 .parse-wrapper {
     display: grid;
     grid-template-columns: 20% 80%;
-    border: 1px red solid;
     width: 1280px;
-    background-color: #ffffff;
+    gap: 1rem;
 }
 
 .parse-container {
     justify-content: center;
     align-items: center;
-    border: 1px blue solid;
-    /* margin-left: .5rem; */
 }
 
 .top {
@@ -85,16 +82,19 @@ nav {
     display: flex;
     justify-content: center;
     padding: 2rem;
+    background-color: #ffffff;
+    border-radius: .5rem;
     table th {
-        font-size: 18px;
+        font-size: 14px;
         text-transform: capitalize;
         color: white;
         background-color: #333333;
-        padding: 16px 24px 16px 24px;
+        padding: 8px 16px 8px 16px;
         text-align: left;
     }
     table td {
-        padding: 16px 24px 16px 24px;
+        font-size: 14px;
+        padding: 8px 16px 8px 16px;
     }
 
     table, th, td {
@@ -103,19 +103,23 @@ nav {
     }
 }
 
+.right {
+    background-color: #ffffff;
+    border-radius: .5rem;
+}
+
 .source-sink-container {
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 2rem;
-    border: 1px green solid;
     input[type=text] {
         border: 1px lightgray solid;
-        padding: 12px;
+        padding: 8px;
     }
     input[type=submit] {
         border: 1px lightgray solid;
-        padding: 12px;
+        padding: 8px;
         border-radius: .25rem;
     }
 }
@@ -127,17 +131,18 @@ nav {
 
 .flow-table {
     display: grid;
-    padding: 2rem;
+    padding: 0 2rem 0 2rem;
     table th {
-        font-size: 18px;
+        font-size: 14px;
         text-transform: capitalize;
         color: white;
         background-color: #333333;
-        padding: 16px 24px 16px 24px;
+        padding: 8px 16px 8px 16px;
         text-align: left;
     }
     table td {
-        padding: 16px 24px 16px 24px;
+        font-size: 14px;
+        padding: 8px 16px 8px 16px;
     }
 
     table, th, td {

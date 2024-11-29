@@ -46,7 +46,7 @@ def flow():
     sink = request.form['sink']
     parse = parse_file(existing_file)
     flow = flow_of_data(existing_file, source, sink)
-    return render_template('flow.html', file=flow, list=parse)
+    return render_template('flow.html', flow=flow, parse=parse)
 
 
 if __name__ == "__main__":

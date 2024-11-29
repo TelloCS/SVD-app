@@ -10,9 +10,9 @@
         <div class="function-table">
             <table>
                 <tr>
-                    <th>Functions</th>
+                    <th>Calls</th>
                 </tr>
-                {% for row in list %}
+                {% for row in parse %}
                     <tr>
                         <td>{{row}}</td>
                     </tr>
@@ -35,7 +35,7 @@
                     <th>tracked</th>
                     <th>line</th>
                 </tr>
-                {% for row in file %}
+                {% for row in flow %}
                     <tr>
                         <td>{{row.nodeType}}</td>
                         <td>{{row.tracked}}</td>
