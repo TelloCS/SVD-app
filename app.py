@@ -3,10 +3,11 @@ from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
 import os
 from flask_sqlalchemy import SQLAlchemy
+from secret import SECRET_KEY
 from main import parse_file, flow_of_data, possible_sql_injection, get_vulnerable_data
 
 app = Flask(__name__)
-app.secret_key = 'supersecretkeyhello'
+app.secret_key = SECRET_KEY
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
 app.config["UPLOAD_DIRECTORY"] = 'uploads/'
