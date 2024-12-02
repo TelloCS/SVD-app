@@ -45,8 +45,9 @@ def flow():
     source = request.form['source']
     sink = request.form['sink']
     parse = parse_file(existing_file)
+    sql_detection = possible_sql_injection(existing_file)
     flow = flow_of_data(existing_file, source, sink)
-    return render_template('flow.html', flow=flow, parse=parse)
+    return render_template('flow.html', flow=flow, file=parse, sql=sql_detection)
 
 
 if __name__ == "__main__":

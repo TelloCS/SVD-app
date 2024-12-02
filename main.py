@@ -2,8 +2,6 @@ import re
 import ast
 import pandas as pd
 
-SQL_OPERATORS = re.compile('SELECT|UPDATE|INSERT|DELETE', re.IGNORECASE)
-
 class TableOfFunctions(ast.NodeVisitor):
     def __init__(self):
         self.func_list = []
@@ -12,10 +10,16 @@ class TableOfFunctions(ast.NodeVisitor):
         if isinstance(node, ast.Assign):
             if isinstance(node.value, ast.Call):
                 if (isinstance(node.value.func, ast.Name) and not node.value.func.id in self.func_list):
-                    self.func_list.append(node.value.func.id)
+                    self.func_list.append({
+                                            'FunctionName': node.value.func.id,
+                                            'lineno': node.lineno
+                                            })
         if isinstance(node, ast.Call):
             if (isinstance(node.func, ast.Attribute) and not node.func.attr in self.func_list):
-                self.func_list.append(node.func.attr)
+                self.func_list.append({
+                                        'FunctionName': node.func.attr,
+                                        'lineno': node.lineno
+                                        })
         self.generic_visit(node)
 
     def get_func_list(self):
@@ -28,48 +32,44 @@ class SourceToSink(ast.NodeVisitor):
         self.code = code
         self.data = []
     
-    def visit_Assign(self, node):
-        # possible source
-        if (isinstance(node.value, ast.Call)
-            and isinstance(node.value.func, ast.Name)
-            and node.value.func.id == self.source
-            ):
-            self.insert_data(type(node).__name__, ast.unparse(node), node.lineno)
-            self.generic_visit(node)
+    def visit_FunctionDef(self, node):
+        for child in node.body:
+            if isinstance(child, ast.Assign) and not isinstance(child.value, (ast.Name, ast.Subscript, ast.Constant)):
+                if isinstance(child.value, ast.Call) and isinstance(child.value.func, ast.Name) and child.value.func.id == self.source:
+                    return self.explore(node.body)
+                elif isinstance(child.value.func, ast.Attribute) and child.value.func.attr == self.source:
+                    return self.explore(node.body)
 
-        # sink
-        if (isinstance(node.targets[0], ast.Name) and node.targets[0].id == self.sink):
-            self.insert_data(type(node).__name__, ast.unparse(node), node.lineno)
-
-    def visit_Call(self, node):
-        # possible source
-        if isinstance(node.func, ast.Name) and node.func.id == self.source:
-            self.insert_data(type(node).__name__, ast.unparse(node), node.lineno)
+            if isinstance(child, ast.Expr) and isinstance(child.value, ast.Call):
+                if isinstance(child.value.func, ast.Name) and child.value.func.id == self.source:
+                    return self.explore(node.body)
+                elif isinstance(child.value.func, ast.Attribute) and child.value.func.attr == self.source:
+                    return self.explore(node.body)
             
-            self.generic_visit(node)
-            
-        if isinstance(node.func, ast.Attribute) and node.func.attr == self.source:
-            self.insert_data(type(node).__name__, ast.unparse(node), node.lineno)
-            
-            unpack_attr = UnpackFuntionCall(self.source)
-            unpack_attr.visit(self.code)
-            info = unpack_attr.get_data()
-            for i in info:
-                self.data.append(i)
-            
-            self.generic_visit(node)
-
-        # sink
-        if isinstance(node.func, ast.Attribute) and node.func.attr == self.sink:
-            self.insert_data(type(node).__name__, ast.unparse(node), node.lineno)
-
-            unpack_attr = UnpackFuntionCall(self.sink)
-            unpack_attr.visit(self.code)
-            info = unpack_attr.get_data()
-            for i in info:
-                self.data.append(i)
-
         self.generic_visit(node)
+
+    def explore(self, curr_func):
+        valid = False
+        for child in curr_func:
+            if isinstance(child, ast.Assign) and not isinstance(child.value, (ast.Name, ast.Subscript, ast.Constant)):
+                if isinstance(child.value, ast.Call) and isinstance(child.value.func, ast.Name) and child.value.func.id == self.source:
+                    valid = True
+                elif isinstance(child.value.func, ast.Attribute) and child.value.func.attr == self.source:
+                    valid = True
+            if isinstance(child, ast.Expr) and isinstance(child.value, ast.Call):
+                if isinstance(child.value.func, ast.Name) and child.value.func.id == self.source:
+                    valid = True
+                elif isinstance(child.value.func, ast.Attribute) and child.value.func.attr == self.source:
+                    valid = True
+            if valid == True:
+                if isinstance(child, ast.Assign) and not isinstance(child.value, ast.Name):
+                    self.insert_data(type(child).__name__, ast.unparse(child), child.lineno)
+                elif isinstance(child, ast.Return):
+                    self.insert_data(type(child).__name__, ast.unparse(child), child.lineno)
+                elif isinstance(child, ast.Expr):
+                    self.insert_data(type(child.value).__name__, ast.unparse(child), child.lineno)
+                    if isinstance(child.value, ast.Call) and isinstance(child.value.func, ast.Attribute) and child.value.func.attr == self.sink:
+                        return
 
     def insert_data(self, nodeType, tracked, line):
         self.data.append({
@@ -83,41 +83,43 @@ class SourceToSink(ast.NodeVisitor):
 
 class SQLInjectionDetection(ast.NodeVisitor):
     def __init__(self):
-        self.injection_patterns = []
-        self.data = []
         self.variables = {}
+        self.data = []
+        self.detected = []
 
     def visit_Assign(self, node):
-        if isinstance(node.targets[0], ast.Name):
-            if isinstance(node.value, (ast.Call, ast.BinOp, ast.Mod)):
-                self.variables[node.targets[0].id] = node.value
-                self.insert_data(type(node).__name__, ast.unparse(node), node.lineno)
-
+        if not isinstance(node.targets[0], ast.Name):
+            return self.generic_visit(node)
+        
+        if isinstance(node.value, (ast.Call, ast.BinOp, ast.Mod, ast.JoinedStr)):
+            self.variables[node.targets[0].id] = node.value
         self.generic_visit(node)
 
     def visit_Call(self, node):
         if isinstance(node.func, ast.Attribute) and node.func.attr == 'execute':
-            argument = node.args[0]
-            if isinstance(argument, ast.Call) and argument.func.attr == 'format':
-                # query = argument.func.value.s
-                # print(query)
-                self.injection_patterns.append(f"Possible SQL injection pattern")
+            if isinstance(node.args[0], ast.Call) and node.args[0].func.attr == 'format':
+                self.detected.append(f'SQL injection pattern')
                 self.insert_data(type(node).__name__, ast.unparse(node), node.lineno)
-
-            elif isinstance(argument, ast.BinOp) and isinstance(argument.op, ast.Mod):
-                self.injection_patterns.append(f"Possible SQL injection pattern")
+            elif isinstance(node.args[0], ast.BinOp) and isinstance(node.args[0].op, ast.Mod):
+                self.detected.append(f'SQL injection pattern')
                 self.insert_data(type(node).__name__, ast.unparse(node), node.lineno)
-
-            elif isinstance(argument, ast.JoinedStr):
-                self.injection_patterns.append(f"Possible SQL injection pattern")
+            elif isinstance(node.args[0], ast.JoinedStr):
+                self.detected.append(f'SQL injection pattern')
                 self.insert_data(type(node).__name__, ast.unparse(node), node.lineno)
+            elif isinstance(node.args[0], ast.Name) and node.args[0].id in self.variables:
+                self.sql_vuln_patterns(self.variables[node.args[0].id])
 
-            elif isinstance(argument, ast.Name) and argument.id in self.variables:
-                query = self.variables[argument.id]
-                print(query)
-                self.injection_patterns.append(f"Possible SQL injection pattern")
-                self.insert_data(type(node).__name__, ast.unparse(node), node.lineno)
-
+    def sql_vuln_patterns(self, node):
+        if isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Attribute) and node.func.attr == 'format':
+                self.detected.append(f'SQL injection pattern')
+                self.insert_data('Assign', ast.unparse(node), node.lineno)
+        elif isinstance(node, ast.BinOp) and isinstance(node.op, ast.Mod):
+            self.detected.append(f'SQL injection pattern')
+            self.insert_data('Assign', ast.unparse(node), node.lineno)
+        elif isinstance(node, ast.JoinedStr):
+            self.detected.append(f'SQL injection pattern')
+            self.insert_data('Assign', ast.unparse(node), node.lineno)
         self.generic_visit(node)
 
     def insert_data(self, nodeType, tracked, line):
@@ -126,13 +128,10 @@ class SQLInjectionDetection(ast.NodeVisitor):
                         'tracked': tracked,
                         'line': line
                         })
+    
+    def get_message(self):
+        return self.detected
 
-    def get_patterns(self):
-        return '\n'.join(self.injection_patterns)
-    
-    def get_variables(self):
-        return self.variables
-    
     def get_data(self):
         return self.data
 
@@ -172,7 +171,7 @@ def parse_file(code):
     analyzer.visit(tree)
     return analyzer.get_func_list()
 
-def flow_of_data(code, source='input', sink='make_uppercase'):
+def flow_of_data(code, source='cursor', sink='fetchall'):
     with open(code) as f:
         code = f.read()
 
@@ -188,7 +187,7 @@ def possible_sql_injection(code):
     tree = ast.parse(code)
     analyzer = SQLInjectionDetection()
     analyzer.visit(tree)
-    return analyzer.get_patterns()
+    return analyzer.get_message()
 
 def get_vulnerable_data(code):
     with open(code) as f:
@@ -200,14 +199,14 @@ def get_vulnerable_data(code):
     return analyzer.get_data()
 
 if __name__ == "__main__":
-    table = parse_file('program2.py')
-    print(table)
+    parse = parse_file('fixed.py')
+    print(parse)
 
-    flow = flow_of_data('program1.py')
+    flow = flow_of_data('fixed.py')
     print(flow)
 
-    vuln = possible_sql_injection('program2.py')
-    print(vuln)
+    # vuln = possible_sql_injection('program2.py')
+    # print(vuln)
 
-    data = get_vulnerable_data('program2.py')
-    print(data)
+    # data = get_vulnerable_data('program2.py')
+    # print(data)

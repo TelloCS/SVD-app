@@ -8,18 +8,17 @@
 <div class="content">
     <form action="/upload" method="post" enctype="multipart/form-data">
         <label for="upload-code">
-            <input type="file" name="upload-code" id="upload-code" accept=".py" required hidden>
+            <input type="file" name="upload-code" id="upload-code" accept=".py" onchange="Showname()" required hidden>
             <div class="upload-info">
-                <p>Drag and drop or click here to upload image</p>
+                <p>Click here to upload file</p>
                 <i class='bx bx-cloud-upload' ></i>
                 <p>Upload a .py file. Max size 16MB.</p>
             </div>
         </label>
-        <!-- need file name to output -->
-        <!-- <div class="file-name" id="file-name">No file(s) selected</div> -->
         <div class="submit-form-container">
+            <p id="log"></p>
             <input type="submit" name="submit-form" id="submit-form" value="Next">
         </div>
     </form>
 </div>
-{% endblock %} 
+{% endblock %}

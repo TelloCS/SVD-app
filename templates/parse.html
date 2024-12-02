@@ -10,11 +10,13 @@
         <div class="function-table">
             <table>
                 <tr>
-                    <th>Functions</th>
+                    <th>Function</th>
+                    <th>Line</th>
                 </tr>
                 {% for row in file %}
                     <tr>
-                        <td>{{row}}</td>
+                        <td>{{row.FunctionName}}</td>
+                        <td>{{row.lineno}}</td>
                     </tr>
                 {% endfor %}
             </table>
@@ -48,7 +50,7 @@
                         <td>...</td>
                         <td>...</td>
                         <td>...</td>
-                    </tr> 
+                    </tr>
                 {% endif %}
             </table>
         </div>  
